@@ -40,7 +40,8 @@ func (serv *Service) SetupService() {
 	serv.Router.PathPrefix("/api").Methods("GET").Path(LanguageRoute).HandlerFunc(LanguageHandler)
 }
 
-// Start the service and logging
+// Start the service and logging it launches two go routines
+// one for serving the API and one of listening to system interrupts.
 func (serv *Service) Start() {
 
 	errChan := make(chan error)
