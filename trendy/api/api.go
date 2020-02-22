@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -54,18 +55,22 @@ func TrendingHandler(w http.ResponseWriter, r *http.Request) {
 	jsonBody, err := fetchData(aMonthAgo, url)
 	if err != nil {
 		log.Fatal("failed to read json body with error :", err)
-		w.WriteHeader(500)
+		w.Write(jsonErrResponse(err, "failed to fetch data from Github API"))
+		return
 	}
 
 	req := &models.RequestedData{}
 	err = json.Unmarshal(jsonBody, req)
 	if err != nil {
 		log.Fatal("failed to unmarshal json response with error:", err)
-		w.WriteHeader(500)
+		w.Write(jsonErrResponse(err, "failed to fetch data from Github API"))
+		return
 	}
 	response, err := json.MarshalIndent(req, "", " ")
 	if err != nil {
 		log.Fatal("failed to marshal json response with error:", err)
+		w.Write(jsonErrResponse(err, "failed to build proper response"))
+		return
 	}
 	w.Write(response)
 }
@@ -76,7 +81,8 @@ func LanguageHandler(w http.ResponseWriter, r *http.Request) {
 	language, ok := vars["language"]
 	if !ok {
 		log.Fatal("no language in path")
-		w.WriteHeader(404)
+		w.Write(jsonErrResponse(errors.New("bad API request"), "language specifier can't be null"))
+		return
 	}
 
 	jsonBody, err := fetchData(aMonthAgo, url)
@@ -85,8 +91,9 @@ func LanguageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = json.Unmarshal(jsonBody, req)
 	if err != nil {
-		log.Fatal("failed to unmarshal json response with error:", err)
-		w.WriteHeader(500)
+		log.Fatal("failed to parse json response with error:", err)
+		w.Write(jsonErrResponse(err, "failed to unmarshal json response"))
+		return
 	}
 
 	resp := &models.LanguageInfo{
@@ -104,7 +111,23 @@ func LanguageHandler(w http.ResponseWriter, r *http.Request) {
 	response, err := json.MarshalIndent(resp, "", " ")
 	if err != nil {
 		log.Fatal("failed to marshal json response with error:", err)
+		w.Write(jsonErrResponse(err, "failed to marshal response"))
+		return
 	}
 	w.Write(response)
 
+}
+func jsonErrResponse(err error, msg string) []byte {
+
+	errResponse := struct {
+		Error   error
+		Message string
+	}{
+		Error:   err,
+		Message: msg,
+	}
+	// we are ommiting serialization errors because we're already failing
+	errResponseBytes, _ := json.Marshal(errResponse)
+
+	return errResponseBytes
 }
