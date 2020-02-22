@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -79,9 +78,8 @@ func TrendingHandler(w http.ResponseWriter, r *http.Request) {
 func LanguageHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	language, ok := vars["language"]
-	if !ok {
+	if !ok || language == "" {
 		log.Fatal("no language in path")
-		w.Write(jsonErrResponse(errors.New("bad API request"), "language specifier can't be null"))
 		return
 	}
 
@@ -120,10 +118,10 @@ func LanguageHandler(w http.ResponseWriter, r *http.Request) {
 func jsonErrResponse(err error, msg string) []byte {
 
 	errResponse := struct {
-		Error   error
+		Error   string
 		Message string
 	}{
-		Error:   err,
+		Error:   err.Error(),
 		Message: msg,
 	}
 	// we are ommiting serialization errors because we're already failing

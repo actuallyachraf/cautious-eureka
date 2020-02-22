@@ -13,6 +13,7 @@ func TestAPIGet(t *testing.T) {
 	t.Run("TestTrending", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/trending", nil)
 		response := mockRequest(req)
+
 		assert.Equal(t, http.StatusOK, response.Code)
 
 		if body := response.Body.String(); body == "" {
@@ -25,10 +26,18 @@ func TestAPIGet(t *testing.T) {
 		response := mockRequest(req)
 
 		assert.Equal(t, http.StatusOK, response.Code)
+
 		body := response.Body
 		if body.String() == "" {
 			t.Errorf("Expected response . Got %s", body)
 		}
+	})
+	t.Run("TestErrorHandling", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/trending/", nil)
+		response := mockRequest(req)
+
+		assert.Equal(t, http.StatusNotFound, response.Code)
+
 	})
 
 }
