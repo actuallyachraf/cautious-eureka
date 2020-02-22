@@ -17,5 +17,5 @@ type RepoInfo struct {
 	// Number of stargazers
 	Stars int `json:"stargazers_count"`
 	// Repo defined language
-	Language string `json:"language"`
+	Language string `json:"language,omitempty"`
 }
